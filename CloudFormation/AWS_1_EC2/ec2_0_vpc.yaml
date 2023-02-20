@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: create VPC and Nets for EC2
+# Metadata: 
+
+# Parameters: 
+
+# Mappings: 
+
+# Conditions: 
+
+Resources:
+  igwName:
+    Type: AWS::EC2::InternetGateway
+    DeletionPolicy: Delete
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Felix_Test_IGW
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref igwName
+  myVPC:
+    Type: AWS::EC2::VPC
+    DeletionPolicy: Delete
+    Properties:
+      CidrBlock: 10.1.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: Felix_Test_VPC
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      AvailabilityZone:
+        Fn::Select: 
+          - 0
+          - Fn::GetAZs: ""
+      # Indicates whether instances launched in this subnet receive a public IPv4 address. The default value is false.
+      MapPublicIpOnLaunch: true
+
+      VpcId: !Ref myVPC
+      CidrBlock: 10.1.1.0/24
+      Tags:
+        - Key: Name
+          Value: PublicSubnet
+
+
+
+Outputs:
+  paramName:
+    Description: 
+    Type: List<AWS::EC2::Subnet::Id>
+    Default: 
