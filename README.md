@@ -1,0 +1,1 @@
+This is the learning journy for AWS Y2023
