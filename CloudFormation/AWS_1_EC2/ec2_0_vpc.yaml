@@ -9,7 +9,7 @@ Description: create VPC and Nets for EC2
 # Conditions: 
 
 Resources:
-  igwName:
+  InternetGW:
     Type: AWS::EC2::InternetGateway
     DeletionPolicy: Delete
     Properties:
@@ -20,7 +20,7 @@ Resources:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref myVPC
-      InternetGatewayId: !Ref igwName
+      InternetGatewayId: !Ref InternetGW
   myVPC:
     Type: AWS::EC2::VPC
     DeletionPolicy: Delete
@@ -47,11 +47,96 @@ Resources:
       Tags:
         - Key: Name
           Value: PublicSubnet
-
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref myVPC
+      Tags:
+        - Key: Name
+          Value: PublicRouteTable
+  PublicSubnetAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+  DefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGW
+  EC2SG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: lab_access_ec2
+      GroupDescription: for access EC2 from CDC, allow HTTP, HTTPS, SSH
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 443
+            ToPort: 443
+            CidrIp: 36.152.113.203/32
+          - IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: 36.152.113.203/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 117.89.135.187/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 36.152.113.203/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 218.2.208.75/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 18.162.220.99/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 18.162.103.100/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 18.162.171.88/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 58.212.197.96/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 18.162.198.138/32
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 117.89.135.187/32
+      Tags:
+        - Key: Name
+          Value: EC2_SG_Felix
+  
 
 
 Outputs:
-  paramName:
-    Description: 
-    Type: List<AWS::EC2::Subnet::Id>
-    Default: 
+  VPCId:
+    Description: VPC ID
+    Value: !Ref myVPC
+    Export:
+        Name: !Sub ${AWS::StackName}-VPCID
+
+  PublicSubnet:
+    Description: The subnet ID of Public subnet ID
+    Value: !Ref PublicSubnet
+    Export:
+        Name: !Sub ${AWS::StackName}-PublicSubnet-ID
+
+  EC2SecurityGroup:
+    Description: Security Allow HTTP and HTTPS
+    Value: !Ref EC2SG
+    Export:
+        Name: !Sub ${AWS::StackName}-EC2SG-ID
